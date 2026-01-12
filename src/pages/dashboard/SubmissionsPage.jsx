@@ -22,8 +22,10 @@ import {
     CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import SubmissionService from '../../services/SubmissionService';
+import { useNavigate } from 'react-router-dom';
 
 export default function SubmissionsPage() {
+    const navigate = useNavigate();
     const [submissions, setSubmissions] = useState([]);
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -123,6 +125,7 @@ export default function SubmissionsPage() {
                                         role="checkbox"
                                         tabIndex={-1}
                                         key={row.id}
+                                        onClick={() => navigate(`/submissions/${row.id}`)}
                                         sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'rgba(37, 99, 235, 0.04)' } }}
                                     >
                                         <TableCell component="th" scope="row">

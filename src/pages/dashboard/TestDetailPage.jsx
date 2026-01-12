@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useReactToPrint } from 'react-to-print';
 import {
     Box,
     Typography,
@@ -25,9 +26,11 @@ import {
     Event as EventIcon,
     Image as ImageIcon,
     Audiotrack as AudioIcon,
-    CheckCircle as CheckCircleIcon
+    CheckCircle as CheckCircleIcon,
+    Print as PrintIcon
 } from '@mui/icons-material';
 import TestService from '../../services/TestService';
+import TestPaper from './TestPaper';
 
 const STORAGE_URL = 'http://localhost:8888/storage/files/';
 
@@ -36,6 +39,12 @@ export default function TestDetailPage() {
     const navigate = useNavigate();
     const [test, setTest] = useState(null);
     const [loading, setLoading] = useState(true);
+    const componentRef = useRef(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: componentRef,
+        documentTitle: test ? `${test.testName} - Exam Paper` : 'Exam Paper',
+    });
 
     useEffect(() => {
         fetchTestDetails();
@@ -127,14 +136,29 @@ export default function TestDetailPage() {
 
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', pb: 5 }}>
+            {/* Hidden Print Component - Use off-screen instead of display:none to ensure ref works */}
+            <div style={{ position: 'absolute', top: '-10000px', left: '-10000px' }}>
+                <TestPaper ref={componentRef} test={test} />
+            </div>
+
             {/* Header */}
-            <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate('/tests')}
-                sx={{ mb: 3, color: 'text.secondary' }}
-            >
-                Back to Tests
-            </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Button
+                    startIcon={<ArrowBackIcon />}
+                    onClick={() => navigate('/tests')}
+                    sx={{ color: 'text.secondary' }}
+                >
+                    Back to Tests
+                </Button>
+                <Button
+                    variant="contained"
+                    startIcon={<PrintIcon />}
+                    onClick={handlePrint}
+                    sx={{ bgcolor: 'primary.main', fontWeight: 'bold' }}
+                >
+                    Export to PDF
+                </Button>
+            </Box>
 
             <Paper sx={{ p: 4, mb: 4, borderRadius: 3, boxShadow: 3 }}>
                 <Grid container spacing={3}>

@@ -13,6 +13,7 @@ import TestsPage from './pages/dashboard/TestsPage';
 import TestDetailPage from './pages/dashboard/TestDetailPage';
 import SubmissionsPage from './pages/dashboard/SubmissionsPage';
 import VocabularyPage from './pages/dashboard/VocabularyPage';
+import SubmissionDetailPage from './pages/dashboard/SubmissionDetailPage';
 
 function App() {
   // Simple check for auth (mock)
@@ -45,6 +46,7 @@ function App() {
             <Route path="users" element={<UsersPage />} />
             <Route path="tests" element={<TestsPage />} />
             <Route path="tests/:id" element={<TestDetailPage />} />
+            <Route path="submissions/:id" element={<SubmissionDetailPage />} /> {/* Added route */}
             <Route path="submissions" element={<SubmissionsPage />} />
             <Route path="vocabulary" element={<VocabularyPage />} />
           </Route>

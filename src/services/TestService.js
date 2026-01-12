@@ -61,10 +61,26 @@ const getTest = async (id) => {
     }
 };
 
-export default {
+
+
+const getAttemptDetails = async (attemptId) => {
+    try {
+        // Use the new endpoint for full details
+        const response = await axios.get(`${API_URL.replace('/tests', '')}/attempt-result/${attemptId}/full-details`, getAuthHeader());
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching attempt details", error);
+        throw error;
+    }
+};
+
+const TestService = {
     getAllTests,
     createTest,
+    getTest,
     updateTest,
     deleteTest,
-    getTest
+    getAttemptDetails
 };
+
+export default TestService;
