@@ -49,20 +49,22 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 });
                 setFiles({ audio: null, image: null });
 
-                // Parse existing explanation for Part 1
-                if (partType === 'part-one' && initialData.explanationAnswer) {
+                if ((partType === 'part-one' || partType === 'part-two') && initialData.explanationAnswer) {
                     const text = initialData.explanationAnswer;
                     const newTranscripts = { A: '', B: '', C: '', D: '' };
 
                     const matchA = text.match(/<p>\(A\) (.*?)<\/p>/);
                     const matchB = text.match(/<p>\(B\) (.*?)<\/p>/);
                     const matchC = text.match(/<p>\(C\) (.*?)<\/p>/);
-                    const matchD = text.match(/<p>\(D\) (.*?)<\/p>/);
 
                     if (matchA) newTranscripts.A = matchA[1];
                     if (matchB) newTranscripts.B = matchB[1];
                     if (matchC) newTranscripts.C = matchC[1];
-                    if (matchD) newTranscripts.D = matchD[1];
+
+                    if (partType === 'part-one') {
+                        const matchD = text.match(/<p>\(D\) (.*?)<\/p>/);
+                        if (matchD) newTranscripts.D = matchD[1];
+                    }
 
                     setTranscripts(newTranscripts);
                 } else {
@@ -79,10 +81,13 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
 
     // Auto-update explanation when transcripts change
     useEffect(() => {
-        if (partType === 'part-one') {
+        if (partType === 'part-one' || partType === 'part-two') {
             const { A, B, C, D } = transcripts;
-            if (A || B || C || D) {
-                const html = `<p>(A) ${A || '...'}</p>\n<p>(B) ${B || '...'}</p>\n<p>(C) ${C || '...'}</p>\n<p>(D) ${D || '...'}</p>`;
+            if (A || B || C || (partType === 'part-one' && D)) {
+                let html = `<p>(A) ${A || '...'}</p>\n<p>(B) ${B || '...'}</p>\n<p>(C) ${C || '...'}</p>`;
+                if (partType === 'part-one') {
+                    html += `\n<p>(D) ${D || '...'}</p>`;
+                }
                 setFormData(prev => ({ ...prev, explanationAnswer: html }));
             }
         }
@@ -184,7 +189,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                         label="Correct Answer"
                         onChange={(e) => handleChange('correctAnswer', parseInt(e.target.value))}
                     >
-                        {[1, 2, 3, 4].map(i => (
+                        {(partType === 'part-two' ? [1, 2, 3] : [1, 2, 3, 4]).map(i => (
                             <MenuItem key={i} value={i}>
                                 Option {['A', 'B', 'C', 'D'][i - 1]}
                             </MenuItem>
@@ -193,14 +198,14 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 </FormControl>
             </Grid>
 
-            {/* Transcript Builder for Part 1 */}
-            {partType === 'part-one' && (
+            {/* Transcript Builder for Part 1 and Part 2 */}
+            {(partType === 'part-one' || partType === 'part-two') && (
                 <Grid item xs={12}>
                     <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
                         Transcript (Auto-generates Explanation)
                     </Typography>
                     <Grid container spacing={2}>
-                        {['A', 'B', 'C', 'D'].map((opt) => (
+                        {['A', 'B', 'C'].concat(partType === 'part-one' ? ['D'] : []).map((opt) => (
                             <Grid item xs={12} sm={6} key={opt}>
                                 <TextField
                                     label={`Option (${opt})`}
@@ -225,7 +230,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                     placeholder="Enter explanation for the correct answer..."
                     value={formData.explanationAnswer || ''}
                     onChange={(e) => handleChange('explanationAnswer', e.target.value)}
-                    helperText={partType === 'part-one' ? "Auto-generated from transcript fields above, or edit manually." : ""}
+                    helperText={(partType === 'part-one' || partType === 'part-two') ? "Auto-generated from transcript fields above, or edit manually." : ""}
                 />
             </Grid>
         </Grid>
