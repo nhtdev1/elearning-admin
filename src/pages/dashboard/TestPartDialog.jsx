@@ -28,11 +28,23 @@ import {
     Description as DescriptionIcon,
     CheckCircle as CheckCircleIcon,
     HelpOutline as HelpOutlineIcon,
-    Quiz as QuizIcon
+    Quiz as QuizIcon,
+    SentimentVerySatisfied as VeryEasyIcon,
+    SentimentSatisfied as EasyIcon,
+    SentimentNeutral as MediumIcon,
+    SentimentDissatisfied as HardIcon,
+    SentimentVeryDissatisfied as VeryHardIcon
 } from '@mui/icons-material';
 import StorageService from '../../services/StorageService';
+import { pink, green, blue, orange, red } from '@mui/material/colors';
 
-const DIFFICULTY_LEVELS = ['VERY_EASY', 'EASY', 'INTERMEDIATE', 'HARD', 'VERY_HARD'];
+const DIFFICULTY_CONFIG = {
+    'VERY_EASY': { label: 'Very Easy', color: green[500], icon: <VeryEasyIcon /> },
+    'EASY': { label: 'Easy', color: blue[500], icon: <EasyIcon /> },
+    'INTERMEDIATE': { label: 'Intermediate', color: orange[500], icon: <MediumIcon /> },
+    'HARD': { label: 'Hard', color: red[400], icon: <HardIcon /> },
+    'VERY_HARD': { label: 'Very Hard', color: red[800], icon: <VeryHardIcon /> }
+};
 
 export default function TestPartDialog({ open, onClose, partType, onSave, initialData }) {
     const [formData, setFormData] = useState({});
@@ -331,13 +343,25 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                             <FormControl fullWidth>
                                 <InputLabel>Difficulty</InputLabel>
                                 <Select
-                                    value={formData.difficultyLevel || 'MEDIUM'}
+                                    value={formData.difficultyLevel || 'INTERMEDIATE'}
                                     label="Difficulty"
                                     onChange={(e) => handleChange('difficultyLevel', e.target.value)}
+                                    renderValue={(selected) => {
+                                        const config = DIFFICULTY_CONFIG[selected] || DIFFICULTY_CONFIG['INTERMEDIATE'];
+                                        return (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: config.color }}>
+                                                {config.icon}
+                                                <Typography variant="body2" sx={{ color: 'text.primary' }}>{config.label}</Typography>
+                                            </Box>
+                                        );
+                                    }}
                                 >
-                                    {DIFFICULTY_LEVELS.map(l => (
-                                        <MenuItem key={l} value={l}>
-                                            {l}
+                                    {Object.keys(DIFFICULTY_CONFIG).map(key => (
+                                        <MenuItem key={key} value={key}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: DIFFICULTY_CONFIG[key].color }}>
+                                                {DIFFICULTY_CONFIG[key].icon}
+                                                <Typography variant="body2" sx={{ color: 'text.primary' }}>{DIFFICULTY_CONFIG[key].label}</Typography>
+                                            </Box>
                                         </MenuItem>
                                     ))}
                                 </Select>
