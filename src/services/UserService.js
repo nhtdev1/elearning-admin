@@ -7,9 +7,9 @@ const getAuthHeader = () => {
     return { headers: { Authorization: `Bearer ${token}` } };
 };
 
-const getAllUsers = async (page = 0, size = 10) => {
+const getAllUsers = async (page = 0, size = 10, keyword = '') => {
     try {
-        const response = await axios.get(`${API_URL}?pageNumber=${page}&pageSize=${size}`, getAuthHeader());
+        const response = await axios.get(`${API_URL}?pageNumber=${page}&pageSize=${size}&keyword=${keyword}`, getAuthHeader());
         return response.data;
     } catch (error) {
         console.error("Error fetching users", error);

@@ -11,9 +11,13 @@ const getAuthHeader = () => {
     };
 };
 
-const getAllSubmissions = async (page = 0, size = 10) => {
+const getAllSubmissions = async (page = 0, size = 10, keyword = '', testMode = '', sortBy = 'completedAt', order = 'desc') => {
     try {
-        const response = await axios.get(`${API_URL}/attempts?page=${page}&size=${size}`, getAuthHeader());
+        let url = `${API_URL}/attempts?page=${page}&size=${size}&keyword=${keyword}&sortBy=${sortBy}&order=${order}`;
+        if (testMode) {
+            url += `&testMode=${testMode}`;
+        }
+        const response = await axios.get(url, getAuthHeader());
         return response.data;
     } catch (error) {
         console.error("Error fetching submissions", error);

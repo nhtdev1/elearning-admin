@@ -27,10 +27,14 @@ import {
     Image as ImageIcon,
     Audiotrack as AudioIcon,
     CheckCircle as CheckCircleIcon,
-    Print as PrintIcon
+    Print as PrintIcon,
+    Add as AddIcon,
+    Edit as EditIcon
 } from '@mui/icons-material';
 import TestService from '../../services/TestService';
 import TestPaper from './TestPaper';
+import TestPartDialog from './TestPartDialog';
+import { toast } from 'react-toastify';
 
 const STORAGE_URL = 'http://localhost:8888/storage/files/';
 
@@ -40,6 +44,11 @@ export default function TestDetailPage() {
     const [test, setTest] = useState(null);
     const [loading, setLoading] = useState(true);
     const componentRef = useRef(null);
+
+    // Dialog state
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [activePart, setActivePart] = useState('');
+    const [editingQuestion, setEditingQuestion] = useState(null);
 
     const handlePrint = useReactToPrint({
         contentRef: componentRef,
@@ -60,6 +69,61 @@ export default function TestDetailPage() {
             console.error("Failed to fetch test details", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleOpenDialog = (part, event, questionData = null) => {
+        event.stopPropagation();
+        setActivePart(part);
+        setEditingQuestion(questionData);
+        setDialogOpen(true);
+    };
+
+    const handleSaveQuestion = async (part, data, files) => {
+        try {
+            let response;
+
+            if (editingQuestion) {
+                // Update Logic
+                const questionId = editingQuestion.id;
+                switch (part) {
+                    case 'part-one': response = await TestService.updateQuestionPartOne(questionId, data); break;
+                    case 'part-two': response = await TestService.updateQuestionPartTwo(questionId, data); break;
+                    case 'part-three': response = await TestService.updateQuestionPartThree(questionId, data); break;
+                    case 'part-four': response = await TestService.updateQuestionPartFour(questionId, data); break;
+                    case 'part-five': response = await TestService.updateQuestionPartFive(questionId, data); break;
+                    case 'part-six': response = await TestService.updateQuestionPartSix(questionId, data); break;
+                    case 'part-seven': response = await TestService.updateQuestionPartSeven(questionId, data); break;
+                    default: break;
+                }
+            } else {
+                // Create Logic
+                switch (part) {
+                    case 'part-one': response = await TestService.addQuestionPartOne(id, data); break;
+                    case 'part-two': response = await TestService.addQuestionPartTwo(id, data); break;
+                    case 'part-three': response = await TestService.addQuestionPartThree(id, data); break;
+                    case 'part-four': response = await TestService.addQuestionPartFour(id, data); break;
+                    case 'part-five': response = await TestService.addQuestionPartFive(id, data); break;
+                    case 'part-six': response = await TestService.addQuestionPartSix(id, data); break;
+                    case 'part-seven': response = await TestService.addQuestionPartSeven(id, data); break;
+                    default: break;
+                }
+            }
+
+            if (response && response.success) {
+                const questionId = editingQuestion ? editingQuestion.id : response.data.id;
+
+                // Upload logic is now handled in TestPartDialog via StorageService
+                // The file paths (IDs) are already in the data object
+
+                toast.success(`Question ${editingQuestion ? 'updated' : 'added'} successfully`);
+                setDialogOpen(false);
+                setEditingQuestion(null);
+                fetchTestDetails(); // Refresh
+            }
+        } catch (error) {
+            console.error("Failed to save question", error);
+            toast.error("Failed to save question");
         }
     };
 
@@ -134,6 +198,18 @@ export default function TestDetailPage() {
         );
     };
 
+    // Helper to render Edit Button
+    const renderEditButton = (part, questionData, parentData = {}) => (
+        <IconButton
+            size="small"
+            color="primary"
+            onClick={(e) => handleOpenDialog(part, e, { ...questionData, ...parentData })}
+            sx={{ ml: 1 }}
+        >
+            <EditIcon fontSize="small" />
+        </IconButton>
+    );
+
     return (
         <Box sx={{ maxWidth: 1200, mx: 'auto', pb: 5 }}>
             {/* Hidden Print Component - Use off-screen instead of display:none to ensure ref works */}
@@ -190,12 +266,25 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 1: Photographs ({test.partOne?.length || 0})</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-one', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         <Grid container spacing={2}>
                             {test.partOne?.map((q) => (
                                 <Grid item xs={12} md={6} key={q.id}>
                                     <Card variant="outlined" sx={{ borderRadius: 2 }}>
                                         <CardContent>
-                                            <Typography variant="subtitle2" gutterBottom>Question {q.questionNo}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <Typography variant="subtitle2" gutterBottom>Question {q.questionNo}</Typography>
+                                                {renderEditButton('part-one', q)}
+                                            </Box>
                                             {renderImage(q.image)}
                                             {renderAudio(q.audio)}
                                             {renderAnswer(q.correctAnswer)}
@@ -213,12 +302,25 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 2: Question-Response ({test.partTwo?.length || 0})</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-two', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         <Grid container spacing={2}>
                             {test.partTwo?.map((q) => (
                                 <Grid item xs={12} md={6} key={q.id}>
                                     <Card variant="outlined" sx={{ borderRadius: 2 }}>
                                         <CardContent>
-                                            <Typography variant="subtitle2" gutterBottom>Question {q.questionNo}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <Typography variant="subtitle2" gutterBottom>Question {q.questionNo}</Typography>
+                                                {renderEditButton('part-two', q)}
+                                            </Box>
                                             {renderAudio(q.audio)}
                                             {renderAnswer(q.correctAnswer)}
                                         </CardContent>
@@ -235,6 +337,16 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 3: Conversations ({test.partThree?.length || 0} Sets)</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-three', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         {test.partThree?.map((group) => (
                             <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }} key={group.id}>
                                 <CardContent>
@@ -246,7 +358,10 @@ export default function TestDetailPage() {
                                     <Divider sx={{ my: 1 }} />
                                     {group.questionList.map(q => (
                                         <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
-                                            <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                                {renderEditButton('part-three', q, { audioUrl: group.audio, imageUrl: group.image })}
+                                            </Box>
                                             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                 {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
                                                     <Typography key={optKey} variant="caption"
@@ -271,6 +386,16 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 4: Talks ({test.partFour?.length || 0} Sets)</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-four', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         {test.partFour?.map((group) => (
                             <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }} key={group.id}>
                                 <CardContent>
@@ -282,7 +407,10 @@ export default function TestDetailPage() {
                                     <Divider sx={{ my: 1 }} />
                                     {group.questionList.map(q => (
                                         <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
-                                            <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                                {renderEditButton('part-four', q, { audioUrl: group.audio, imageUrl: group.image })}
+                                            </Box>
                                             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                 {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
                                                     <Typography key={optKey} variant="caption"
@@ -307,12 +435,25 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 5: Incomplete Sentences ({test.partFive?.length || 0})</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-five', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         <Grid container spacing={2}>
                             {test.partFive?.map((q) => (
                                 <Grid item xs={12} key={q.id}>
                                     <Card variant="outlined" sx={{ borderRadius: 2 }}>
                                         <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-                                            <Typography variant="body2" fontWeight="600" gutterBottom>Q{q.questionNo}: {q.questionText}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2" fontWeight="600" gutterBottom>Q{q.questionNo}: {q.questionText}</Typography>
+                                                {renderEditButton('part-five', q)}
+                                            </Box>
                                             <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
                                                 {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
                                                     <Typography key={optKey} variant="caption"
@@ -337,6 +478,16 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 6: Text Completion ({test.partSix?.length || 0} Sets)</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-six', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         {test.partSix?.map((group) => (
                             <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }} key={group.id}>
                                 <CardContent>
@@ -346,7 +497,10 @@ export default function TestDetailPage() {
                                     <Divider sx={{ my: 1 }} />
                                     {group.questionList.map(q => (
                                         <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
-                                            <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                                {renderEditButton('part-six', q, { paragraph: group.paragraph })}
+                                            </Box>
                                             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                 {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
                                                     <Typography key={optKey} variant="caption"
@@ -371,6 +525,16 @@ export default function TestDetailPage() {
                         <Typography variant="h6" fontWeight="600">Part 7: Reading Comprehension ({test.partSeven?.length || 0} Sets)</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<AddIcon />}
+                                onClick={(e) => handleOpenDialog('part-seven', e)}
+                            >
+                                Add Question
+                            </Button>
+                        </Box>
                         {test.partSeven?.map((group) => (
                             <Card variant="outlined" sx={{ mb: 2, borderRadius: 2 }} key={group.id}>
                                 <CardContent>
@@ -381,7 +545,10 @@ export default function TestDetailPage() {
                                     <Divider sx={{ my: 1 }} />
                                     {group.questionList.map(q => (
                                         <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
-                                            <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
+                                                {renderEditButton('part-seven', q, { imageUrl: group.image, paragraph: group.paragraph })}
+                                            </Box>
                                             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                 {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
                                                     <Typography key={optKey} variant="caption"
@@ -401,6 +568,14 @@ export default function TestDetailPage() {
                 </Accordion>
 
             </Box>
+
+            <TestPartDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                partType={activePart}
+                onSave={handleSaveQuestion}
+                initialData={editingQuestion}
+            />
         </Box>
     );
 }

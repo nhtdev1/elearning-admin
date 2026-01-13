@@ -34,7 +34,9 @@ import {
     AdminPanelSettings as AdminIcon,
     SupervisedUserCircle as UserIcon,
     Block as BlockIcon,
-    CheckCircle as CheckIcon
+    CheckCircle as CheckIcon,
+    FilterList as FilterListIcon,
+    Clear as ClearIcon
 } from '@mui/icons-material';
 import UserService from '../../services/UserService';
 import { toast } from 'react-toastify';
@@ -50,14 +52,15 @@ export default function UsersPage() {
     const [editingUser, setEditingUser] = useState(null);
     const [selectedRole, setSelectedRole] = useState('ROLE_USER');
     const [selectedStatus, setSelectedStatus] = useState(true);
+    const [keyword, setKeyword] = useState('');
 
     useEffect(() => {
         fetchUsers();
-    }, [page, rowsPerPage]);
+    }, [page, rowsPerPage, keyword]);
 
     const fetchUsers = async () => {
         try {
-            const response = await UserService.getAllUsers(page, rowsPerPage);
+            const response = await UserService.getAllUsers(page, rowsPerPage, keyword);
             // Handle different potential response structures from backend/UserService
             // Should be structured as { users: [], totalElements: N } or standard Page
 
@@ -81,6 +84,11 @@ export default function UsersPage() {
             console.error("Failed to fetch users", error);
             toast.error("Could not load users");
         }
+    };
+
+    const handleSearch = (e) => {
+        setKeyword(e.target.value);
+        setPage(0);
     };
 
     const handleEdit = (user) => {
@@ -134,8 +142,51 @@ export default function UsersPage() {
                     </Avatar>
                     <Typography variant="h5" sx={{ fontWeight: 700 }}>User Management</Typography>
                 </Box>
-                {/* Search could be added here if backend supported it */}
             </Box>
+
+            {/* Search Toolbar */}
+            <Paper sx={{ p: 2, mb: 3, borderRadius: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mr: 1 }}>
+                    <FilterListIcon />
+                    <Typography variant="subtitle2" sx={{ ml: 1, fontWeight: 600 }}>Search:</Typography>
+                </Box>
+
+                <TextField
+                    placeholder="Search users by name or email..."
+                    size="small"
+                    value={keyword}
+                    onChange={handleSearch}
+                    sx={{ flexGrow: 1 }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        endAdornment: keyword && (
+                            <InputAdornment position="end">
+                                <IconButton size="small" onClick={() => { setKeyword(''); setPage(0); }}>
+                                    <ClearIcon fontSize="small" />
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
+                />
+
+                {keyword && (
+                    <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => {
+                            setKeyword('');
+                            setPage(0);
+                        }}
+                        startIcon={<ClearIcon />}
+                    >
+                        Clear Search
+                    </Button>
+                )}
+            </Paper>
 
             <TableContainer>
                 <Table>

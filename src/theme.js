@@ -116,6 +116,44 @@ const theme = createTheme({
                     }
                 }
             }
+        },
+        MuiTablePagination: {
+            styleOverrides: {
+                root: {
+                    borderTop: '1px solid #e5e7eb', // Separator
+                    backgroundColor: '#f9fafb', // Light gray background
+                    borderBottomLeftRadius: 16, // Match Paper radius
+                    borderBottomRightRadius: 16,
+                    color: '#374151',
+                },
+                toolbar: {
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                },
+                selectLabel: {
+                    fontWeight: 600,
+                    color: '#6b7280', // Gray 500
+                    textTransform: 'uppercase',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
+                },
+                displayedRows: {
+                    fontWeight: 500,
+                    color: '#111827', // Gray 900
+                    fontSize: '0.875rem',
+                },
+                select: {
+                    fontWeight: 600,
+                    backgroundColor: '#ffffff',
+                    borderRadius: 6,
+                    paddingLeft: '8px !important',
+                    paddingRight: '24px !important',
+                    border: '1px solid #e5e7eb',
+                    '&:focus': {
+                        backgroundColor: '#ffffff',
+                    }
+                }
+            }
         }
     },
 });

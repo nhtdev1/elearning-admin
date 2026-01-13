@@ -30,10 +30,14 @@ import {
     Search as SearchIcon,
     Quiz as QuizIcon,
     Timer as TimerIcon,
-    Visibility as VisibilityIcon
+    Visibility as VisibilityIcon,
+    FilterList as FilterListIcon,
+    Clear as ClearIcon,
+    UploadFile as UploadFileIcon
 } from '@mui/icons-material';
 import TestService from '../../services/TestService';
 import { toast } from 'react-toastify';
+import { useRef } from 'react';
 
 export default function TestsPage() {
     const navigate = useNavigate();
@@ -42,6 +46,8 @@ export default function TestsPage() {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [keyword, setKeyword] = useState('');
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
 
     // Dialog State
     const [open, setOpen] = useState(false);
@@ -123,6 +129,25 @@ export default function TestsPage() {
         }
     };
 
+    const handleFileUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            await TestService.uploadTestsByExcel(file);
+            toast.success("Tests imported successfully from Excel");
+            fetchTests();
+        } catch (error) {
+            toast.error("Failed to import tests. Please check the file format.");
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
     return (
         <Card sx={{ border: 'none', boxShadow: 3, overflow: 'hidden' }}>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -133,21 +158,70 @@ export default function TestsPage() {
                     <Typography variant="h5" sx={{ fontWeight: 700 }}>Test Management</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <TextField
-                        size="small"
-                        placeholder="Search tests..."
-                        value={keyword}
-                        onChange={handleSearch}
-                        InputProps={{
-                            startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment>,
-                            sx: { borderRadius: 2 }
-                        }}
+                    <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        style={{ display: 'none' }}
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
                     />
+                    <Button
+                        variant="outlined"
+                        startIcon={<UploadFileIcon />}
+                        onClick={() => fileInputRef.current.click()}
+                        disabled={uploading}
+                    >
+                        {uploading ? 'Importing...' : 'Import Excel'}
+                    </Button>
                     <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
                         Create Test
                     </Button>
                 </Box>
             </Box>
+
+            {/* Search Toolbar */}
+            <Paper sx={{ p: 2, mb: 3, borderRadius: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mr: 1 }}>
+                    <FilterListIcon />
+                    <Typography variant="subtitle2" sx={{ ml: 1, fontWeight: 600 }}>Search:</Typography>
+                </Box>
+
+                <TextField
+                    placeholder="Search tests by name or description..."
+                    size="small"
+                    value={keyword}
+                    onChange={handleSearch}
+                    sx={{ flexGrow: 1 }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        endAdornment: keyword && (
+                            <InputAdornment position="end">
+                                <IconButton size="small" onClick={() => { setKeyword(''); setPage(0); }}>
+                                    <ClearIcon fontSize="small" />
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
+                />
+
+                {keyword && (
+                    <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => {
+                            setKeyword('');
+                            setPage(0);
+                        }}
+                        startIcon={<ClearIcon />}
+                    >
+                        Clear Search
+                    </Button>
+                )}
+            </Paper>
 
             <TableContainer>
                 <Table>
@@ -256,7 +330,7 @@ export default function TestsPage() {
                     <Avatar sx={{ bgcolor: editingTest ? 'primary.light' : 'success.light', color: editingTest ? 'primary.main' : 'success.main', width: 32, height: 32 }}>
                         {editingTest ? <EditIcon sx={{ fontSize: 18 }} /> : <AddIcon sx={{ fontSize: 18 }} />}
                     </Avatar>
-                    <Typography variant="h6" fontWeight="700">
+                    <Typography variant="h6" component="span" fontWeight="700">
                         {editingTest ? 'Edit Test' : 'New Test'}
                     </Typography>
                 </DialogTitle>
@@ -315,6 +389,6 @@ export default function TestsPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Card>
+        </Card >
     );
 }

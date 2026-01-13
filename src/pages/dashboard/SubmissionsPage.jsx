@@ -13,14 +13,26 @@ import {
     TablePagination,
     Avatar,
     Stack,
-    CircularProgress
+    CircularProgress,
+    TextField,
+    InputAdornment,
+    IconButton,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    TableSortLabel
 } from '@mui/material';
 import {
     AssignmentInd as AssignmentIcon,
     AccessTime as TimeIcon,
     Score as ScoreIcon,
-    CheckCircle as CheckCircleIcon
+    CheckCircle as CheckCircleIcon,
+    Search as SearchIcon,
+    FilterList as FilterListIcon,
+    Clear as ClearIcon
 } from '@mui/icons-material';
+import { Button } from '@mui/material';
 import SubmissionService from '../../services/SubmissionService';
 import { useNavigate } from 'react-router-dom';
 
@@ -31,15 +43,20 @@ export default function SubmissionsPage() {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalElements, setTotalElements] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [keyword, setKeyword] = useState('');
+    const [testMode, setTestMode] = useState('');
+    const [orderBy, setOrderBy] = useState('completedAt');
+    const [order, setOrder] = useState('desc');
 
     useEffect(() => {
         fetchSubmissions();
-    }, [page, rowsPerPage]);
+    }, [page, rowsPerPage, keyword, testMode, orderBy, order]);
 
     const fetchSubmissions = async () => {
         setLoading(true);
         try {
-            const response = await SubmissionService.getAllSubmissions(page, rowsPerPage);
+            const response = await SubmissionService.getAllSubmissions(page, rowsPerPage, keyword, testMode, orderBy, order);
             if (response.success || response.isSuccess) {
                 // The backend returns a Page object inside data
                 const { content, totalElements } = response.data;
@@ -59,6 +76,24 @@ export default function SubmissionsPage() {
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
+    const handleSearch = () => {
+        setKeyword(searchTerm);
+        setPage(0);
+    };
+
+    const handleKeyPress = (event) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+    const handleRequestSort = (property) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
         setPage(0);
     };
 
@@ -92,6 +127,79 @@ export default function SubmissionsPage() {
                 </div>
             </Box>
 
+            {/* Filter Toolbar */}
+            <Paper sx={{ p: 2, mb: 3, borderRadius: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary', mr: 1 }}>
+                    <FilterListIcon />
+                    <Typography variant="subtitle2" sx={{ ml: 1, fontWeight: 600 }}>Filters:</Typography>
+                </Box>
+
+                <TextField
+                    placeholder="Search by student or test name..."
+                    size="small"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    sx={{ flexGrow: 1, minWidth: 200 }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon color="action" />
+                            </InputAdornment>
+                        ),
+                        endAdornment: searchTerm && (
+                            <InputAdornment position="end">
+                                <IconButton size="small" onClick={() => { setSearchTerm(''); setKeyword(''); setPage(0); }}>
+                                    <ClearIcon fontSize="small" />
+                                </IconButton>
+                            </InputAdornment>
+                        )
+                    }}
+                />
+
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                    <InputLabel>Test Mode</InputLabel>
+                    <Select
+                        value={testMode}
+                        label="Test Mode"
+                        onChange={(e) => {
+                            setTestMode(e.target.value);
+                            setPage(0);
+                        }}
+                    >
+                        <MenuItem value=""><em>All Modes</em></MenuItem>
+                        <MenuItem value="FULL_TEST">Full Test</MenuItem>
+                        <MenuItem value="HALF_TEST">Half Test</MenuItem>
+                        <MenuItem value="PART_PRACTICE">Part Practice</MenuItem>
+                        <MenuItem value="MINI_TEST">Mini Test</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {(keyword || testMode) && (
+                    <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => {
+                            setSearchTerm('');
+                            setKeyword('');
+                            setTestMode('');
+                            setPage(0);
+                        }}
+                        startIcon={<ClearIcon />}
+                    >
+                        Clear Filters
+                    </Button>
+                )}
+
+                <IconButton
+                    color="primary"
+                    onClick={handleSearch}
+                    sx={{ bgcolor: 'primary.main', color: 'white', '&:hover': { bgcolor: 'primary.dark' } }}
+                >
+                    <SearchIcon />
+                </IconButton>
+            </Paper>
+
             <Paper sx={{ width: '100%', mb: 2, borderRadius: 3, boxShadow: 2, overflow: 'hidden' }}>
                 <TableContainer>
                     <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
@@ -100,9 +208,25 @@ export default function SubmissionsPage() {
                                 <TableCell sx={{ fontWeight: 'bold' }}>Student</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Test</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Mode</TableCell>
-                                <TableCell sx={{ fontWeight: 'bold' }}>Date & Time</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold' }}>
+                                    <TableSortLabel
+                                        active={orderBy === 'completedAt'}
+                                        direction={orderBy === 'completedAt' ? order : 'asc'}
+                                        onClick={() => handleRequestSort('completedAt')}
+                                    >
+                                        Date & Time
+                                    </TableSortLabel>
+                                </TableCell>
                                 <TableCell sx={{ fontWeight: 'bold' }}>Details</TableCell>
-                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>Total Score</TableCell>
+                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                                    <TableSortLabel
+                                        active={orderBy === 'totalScore'}
+                                        direction={orderBy === 'totalScore' ? order : 'asc'}
+                                        onClick={() => handleRequestSort('totalScore')}
+                                    >
+                                        Total Score
+                                    </TableSortLabel>
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
