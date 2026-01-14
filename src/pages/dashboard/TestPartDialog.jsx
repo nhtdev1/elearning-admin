@@ -46,7 +46,7 @@ const DIFFICULTY_CONFIG = {
     'VERY_HARD': { label: 'Very Hard', color: red[800], icon: <VeryHardIcon /> }
 };
 
-export default function TestPartDialog({ open, onClose, partType, onSave, initialData }) {
+export default function TestPartDialog({ open, onClose, partType, onSave, initialData, suggestedQuestionNo }) {
     const [formData, setFormData] = useState({});
     const [files, setFiles] = useState({ audio: null, image: null });
     const [transcripts, setTranscripts] = useState({ A: '', B: '', C: '', D: '' });
@@ -84,7 +84,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 }
             } else {
                 // Reset for new entry
-                setFormData(getInitialFormData(partType));
+                setFormData(getInitialFormData(partType, suggestedQuestionNo));
                 setFiles({ audio: null, image: null });
                 setTranscripts({ A: '', B: '', C: '', D: '' });
             }
@@ -105,10 +105,10 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
         }
     }, [transcripts, partType]);
 
-    const getInitialFormData = (type) => {
+    const getInitialFormData = (type, suggested) => {
         // Common base
         const base = {
-            questionNo: '',
+            questionNo: 0, // Auto-generated
             correctAnswer: 1,
             explanationAnswer: '',
             difficultyLevel: 'INTERMEDIATE',
@@ -157,11 +157,8 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
 
 
     const handleSubmit = async () => {
-        // Validate
-        if (!formData.questionNo) {
-            alert("Question Number is required");
-            return;
-        }
+        // Validate (Question No is now auto-generated)
+        // if (!formData.questionNo) { ... }
 
         let updatedFormData = { ...formData };
 
@@ -332,11 +329,11 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                         <Grid item xs={12} md={6}>
                             <TextField
                                 label="Question No"
-                                type="number"
+                                type="text"
                                 fullWidth
-                                required
-                                value={formData.questionNo || ''}
-                                onChange={(e) => handleChange('questionNo', parseInt(e.target.value))}
+                                disabled
+                                value={formData.questionNo > 0 ? formData.questionNo : 'Auto-generated'}
+                                helperText="Number will be assigned automatically"
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
