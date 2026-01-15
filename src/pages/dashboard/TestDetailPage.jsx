@@ -578,6 +578,7 @@ export default function TestDetailPage() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         {renderQuestionCheckbox('part-three', group.id)}
                                                         <Typography variant="subtitle1" fontWeight="bold">Questions {group.questionList[0]?.questionNo}-{group.questionList[group.questionList.length - 1]?.questionNo}</Typography>
+                                                        {renderEditButton('part-three', group)}
                                                     </Box>
                                                     {renderAudio(group.audio)}
                                                     {renderImage(group.image)}
@@ -587,7 +588,6 @@ export default function TestDetailPage() {
                                                     <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                             <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
-                                                            {renderEditButton('part-three', group)}
                                                         </Box>
                                                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                             {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
@@ -634,6 +634,7 @@ export default function TestDetailPage() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         {renderQuestionCheckbox('part-four', group.id)}
                                                         <Typography variant="subtitle1" fontWeight="bold">Questions {group.questionList[0]?.questionNo}-{group.questionList[group.questionList.length - 1]?.questionNo}</Typography>
+                                                        {renderEditButton('part-four', group)}
                                                     </Box>
                                                     {renderAudio(group.audio)}
                                                     {renderImage(group.image)}
@@ -643,7 +644,6 @@ export default function TestDetailPage() {
                                                     <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                             <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
-                                                            {renderEditButton('part-four', q, { audioUrl: group.audio, imageUrl: group.image })}
                                                         </Box>
                                                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                             {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
@@ -740,6 +740,8 @@ export default function TestDetailPage() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         {renderQuestionCheckbox('part-six', group.id)}
                                                         <Typography variant="subtitle2" color="text.secondary">Group ID: {group.id}</Typography>
+                                                        <Box sx={{ flexGrow: 1 }} />
+                                                        {renderEditButton('part-six', group)}
                                                     </Box>
                                                     <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{group.paragraph}</Typography>
                                                 </Box>
@@ -748,7 +750,6 @@ export default function TestDetailPage() {
                                                     <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                             <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
-                                                            {renderEditButton('part-six', q, { paragraph: group.paragraph })}
                                                         </Box>
                                                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                             {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
@@ -795,6 +796,8 @@ export default function TestDetailPage() {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                                                         {renderQuestionCheckbox('part-seven', group.id)}
                                                         <Typography variant="subtitle2" color="text.secondary">Group ID: {group.id}</Typography>
+                                                        <Box sx={{ flexGrow: 1 }} />
+                                                        {renderEditButton('part-seven', group)}
                                                     </Box>
                                                     {renderImage(group.image)}
                                                     <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{group.paragraph}</Typography>
@@ -804,7 +807,6 @@ export default function TestDetailPage() {
                                                     <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                             <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
-                                                            {renderEditButton('part-seven', q, { imageUrl: group.image, paragraph: group.paragraph })}
                                                         </Box>
                                                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                             {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
