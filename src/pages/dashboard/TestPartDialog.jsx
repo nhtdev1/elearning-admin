@@ -49,9 +49,8 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
     useEffect(() => {
         if (open) {
             if (initialData) {
-                // If Part 3, structure might be different or we need to map it back
-                // For now, assuming initialData matches the CreateDTO structure roughly
-                if (partType === 'part-three') {
+                // If Part 3 or Part 4, structure might be different or we need to map it back
+                if (partType === 'part-three' || partType === 'part-four') {
                     setFormData({
                         ...initialData,
                         questionsList: initialData.questionsList || initialData.questionList || [
@@ -116,7 +115,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
             difficultyLevel: 'INTERMEDIATE',
         };
 
-        if (type === 'part-three') {
+        if (type === 'part-three' || type === 'part-four') {
             return {
                 questionNo: 0,
                 transcript: '',
@@ -136,8 +135,8 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
             return base;
         }
 
-        // Other group parts (6, 7, 4) - placeholder
-        if (['part-four', 'part-six', 'part-seven'].includes(type)) {
+        // Other group parts (6, 7) - placeholder
+        if (['part-six', 'part-seven'].includes(type)) {
             return { ...base, transcript: '', questionText: 'Sub-question 1', option1: '', option2: '', option3: '', option4: '' };
         }
         return base;
@@ -176,9 +175,8 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
             if (field === 'audio') {
                 const audio = new Audio(URL.createObjectURL(file));
                 audio.onloadedmetadata = () => {
-                    // For Part 3, we don't strictly need duration on the parent DTO usually, 
-                    // but can store it if needed. The backend logic for Part 3 DTO doesn't explicitly 
-                    // show audioDuration on parent, but let's keep it in state just in case.
+                    // For Part 3/4, we don't strictly need duration on the parent DTO usually, 
+                    // but can store it if needed.
                     setFormData(prev => ({ ...prev, audioDuration: Math.round(audio.duration) }));
                     URL.revokeObjectURL(audio.src);
                 };
@@ -195,13 +193,13 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 const audioResponse = await StorageService.uploadFile(files.audio);
                 if (audioResponse?.data?.id) updatedFormData.audio = audioResponse.data.id;
             }
-            // Upload Image
+            // Upload Image (Only if files.image is set, effectively skipped for Part 4 if UI doesn't allow it)
             if (files.image) {
                 const imageResponse = await StorageService.uploadFile(files.image);
                 if (imageResponse?.data?.id) updatedFormData.image = imageResponse.data.id;
             }
 
-            // For Part 3, we are sending the structure as is (updatedFormData now has audio/image IDs)
+            // For Part 3/4, we are sending the structure as is (updatedFormData now has audio/image IDs)
             onSave(partType, updatedFormData, null);
         } catch (error) {
             console.error("File upload failed", error);
@@ -320,7 +318,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
         </Grid>
     );
 
-    const renderPart3Form = () => (
+    const renderGroupForm = () => (
         <Box sx={{ mt: 1 }}>
             {/* Parent Level Info */}
             <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: '#f8f9fa' }}>
@@ -370,8 +368,14 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                     MEDIA FILES
                 </Typography>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>{renderFileUpload('audio', 'Group Audio')}</Grid>
-                    <Grid item xs={12} md={6}>{renderFileUpload('image', 'Context Image')}</Grid>
+                    <Grid item xs={12} md={partType === 'part-four' ? 12 : 6}>
+                        {renderFileUpload('audio', 'Group Audio')}
+                    </Grid>
+                    {partType !== 'part-four' && (
+                        <Grid item xs={12} md={6}>
+                            {renderFileUpload('image', 'Context Image')}
+                        </Grid>
+                    )}
                 </Grid>
             </Paper>
 
@@ -445,7 +449,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 {initialData ? 'Edit Question' : 'Add Question'} - {partType?.replace('-', ' ').toUpperCase()}
             </DialogTitle>
             <DialogContent sx={{ py: 3 }}>
-                {partType === 'part-three' ? renderPart3Form() : (
+                {(partType === 'part-three' || partType === 'part-four') ? renderGroupForm() : (
                     <Box sx={{ mt: 1 }}>
                         {/* Default Single Question Form (Part 1, 2, 5) */}
                         <Grid container spacing={3} sx={{ mb: 4 }}>
