@@ -323,57 +323,119 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
     const renderPart3Form = () => (
         <Box sx={{ mt: 1 }}>
             {/* Parent Level Info */}
-            <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold' }}>GROUP INFORMATION (CONVERSATION)</Typography>
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid item xs={12} md={6}>
-                    <TextField
-                        label="Starting Question No"
-                        fullWidth disabled
-                        value={formData.questionNo > 0 ? formData.questionNo : 'Auto-generated'}
-                        helperText="System assigns numbers sequentially"
-                    />
+            <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: '#f8f9fa' }}>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                    GROUP INFORMATION
+                </Typography>
+                <Grid container spacing={2}>
+                    <Grid item xs={12} md={4}>
+                        <TextField
+                            label="Starting Question No"
+                            fullWidth
+                            disabled
+                            value={formData.questionNo > 0 ? formData.questionNo : 'Auto-generated'}
+                            helperText="Assigned automatically"
+                            size="small"
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={8} />
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            label="Transcript (English)"
+                            fullWidth
+                            multiline
+                            rows={4}
+                            value={formData.transcript || ''}
+                            onChange={(e) => handleChange('transcript', e.target.value)}
+                            placeholder="Conversation text..."
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            label="Transcript (Vietnamese)"
+                            fullWidth
+                            multiline
+                            rows={4}
+                            value={formData.vietnameseTranscript || ''}
+                            onChange={(e) => handleChange('vietnameseTranscript', e.target.value)}
+                            placeholder="Vietnamese translation..."
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12}>
-                    <TextField label="Transcript (English)" fullWidth multiline rows={3} value={formData.transcript || ''} onChange={(e) => handleChange('transcript', e.target.value)} />
-                </Grid>
-                <Grid item xs={12}>
-                    <TextField label="Transcript (Vietnamese)" fullWidth multiline rows={3} value={formData.vietnameseTranscript || ''} onChange={(e) => handleChange('vietnameseTranscript', e.target.value)} />
-                </Grid>
-            </Grid>
+            </Paper>
 
             {/* Media */}
-            <Box sx={{ mb: 4, p: 2, border: '1px dashed #ccc', borderRadius: 2 }}>
-                <Typography variant="subtitle2" sx={{ mb: 2 }}>GROUP MEDIA</Typography>
+            <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                    MEDIA FILES
+                </Typography>
                 <Grid container spacing={2}>
-                    <Grid item xs={12} md={6}>{renderFileUpload('audio', 'Conversation Audio')}</Grid>
-                    <Grid item xs={12} md={6}>{renderFileUpload('image', 'Context Image (Optional)')}</Grid>
+                    <Grid item xs={12} md={6}>{renderFileUpload('audio', 'Group Audio')}</Grid>
+                    <Grid item xs={12} md={6}>{renderFileUpload('image', 'Context Image')}</Grid>
                 </Grid>
-            </Box>
+            </Paper>
 
             {/* Sub Questions */}
-            <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold' }}>QUESTIONS (3 ITEMS)</Typography>
-            {formData.questionsList?.map((q, index) => (
-                <Paper key={index} sx={{ p: 2, mb: 3, bgcolor: '#fafafa' }} elevation={1}>
-                    <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 'bold' }}>Question {index + 1}</Typography>
-                    <Grid container spacing={2} sx={{ mb: 2 }}>
-                        <Grid item xs={12}>
-                            <TextField label="Question Text" fullWidth size="small" value={q.questionText} onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)} />
-                        </Grid>
-                        {[1, 2, 3, 4].map(opt => (
-                            <Grid item xs={12} sm={6} key={opt}>
+            <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                    QUESTIONS (3 ITEMS)
+                </Typography>
+                {formData.questionsList?.map((q, index) => (
+                    <Paper key={index} elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, pb: 1, borderBottom: '1px solid #eee' }}>
+                            <Box sx={{
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                width: 24,
+                                height: 24,
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mr: 1.5,
+                                fontSize: '0.875rem',
+                                fontWeight: 'bold'
+                            }}>
+                                {index + 1}
+                            </Box>
+                            <Typography variant="subtitle1" fontWeight="bold">Question Details</Typography>
+                        </Box>
+
+                        <Grid container spacing={3}>
+                            <Grid item xs={12}>
                                 <TextField
-                                    label={`Option ${['A', 'B', 'C', 'D'][opt - 1]}`}
-                                    fullWidth size="small"
-                                    value={q[`option${opt}`]}
-                                    onChange={(e) => handleQuestionChange(index, `option${opt}`, e.target.value)}
-                                    InputProps={{ startAdornment: <InputAdornment position="start">{['A', 'B', 'C', 'D'][opt - 1]}</InputAdornment> }}
+                                    label="Question Text"
+                                    fullWidth
+                                    value={q.questionText}
+                                    onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
                                 />
                             </Grid>
-                        ))}
-                    </Grid>
-                    {renderCommonFields(q, index, true)}
-                </Paper>
-            ))}
+                            {[1, 2, 3, 4].map(opt => (
+                                <Grid item xs={12} sm={6} key={opt}>
+                                    <TextField
+                                        label={`Option ${['A', 'B', 'C', 'D'][opt - 1]}`}
+                                        fullWidth
+                                        size="small"
+                                        value={q[`option${opt}`]}
+                                        onChange={(e) => handleQuestionChange(index, `option${opt}`, e.target.value)}
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <Typography variant="body2" fontWeight="bold" color="text.secondary">
+                                                        {['(A)', '(B)', '(C)', '(D)'][opt - 1]}
+                                                    </Typography>
+                                                </InputAdornment>
+                                            )
+                                        }}
+                                    />
+                                </Grid>
+                            ))}
+                        </Grid>
+                        <Divider sx={{ my: 3, width: '100%' }} />
+                        {renderCommonFields(q, index, true, true)}
+                    </Paper>
+                ))}
+            </Box>
         </Box>
     );
 
