@@ -54,7 +54,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 if (partType === 'part-three') {
                     setFormData({
                         ...initialData,
-                        questionsList: initialData.questionsList || [
+                        questionsList: initialData.questionsList || initialData.questionList || [
                             createEmptyQuestion(), createEmptyQuestion(), createEmptyQuestion()
                         ]
                     });

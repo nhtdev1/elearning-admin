@@ -587,7 +587,7 @@ export default function TestDetailPage() {
                                                     <Box key={q.id} sx={{ mt: 1, pl: 2, borderLeft: '3px solid #eee' }}>
                                                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                             <Typography variant="body2" fontWeight="600">Q{q.questionNo}: {q.questionText}</Typography>
-                                                            {renderEditButton('part-three', q, { audioUrl: group.audio, imageUrl: group.image })}
+                                                            {renderEditButton('part-three', group)}
                                                         </Box>
                                                         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 0.5, mb: 1 }}>
                                                             {['option1', 'option2', 'option3', 'option4'].map((optKey, idx) => (
