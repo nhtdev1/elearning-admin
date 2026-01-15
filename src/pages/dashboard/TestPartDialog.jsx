@@ -50,12 +50,18 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
         if (open) {
             if (initialData) {
                 // If Part 3 or Part 4, structure might be different or we need to map it back
-                if (partType === 'part-three' || partType === 'part-four') {
+                // If Part 3, 4, 6, 7 structure might be different or we need to map it back
+                if (['part-three', 'part-four', 'part-six', 'part-seven'].includes(partType)) {
+                    // Default question count: 3 for Part 3/4, 4 for Part 6, 5 or user defined for Part 7
+                    let defaultCount = 3;
+                    if (partType === 'part-six') defaultCount = 4;
+                    if (partType === 'part-seven') defaultCount = 2; // Default to 2 for Part 7
+
+                    const defaultQuestions = Array(defaultCount).fill().map(() => createEmptyQuestion());
+
                     setFormData({
                         ...initialData,
-                        questionsList: initialData.questionsList || initialData.questionList || [
-                            createEmptyQuestion(), createEmptyQuestion(), createEmptyQuestion()
-                        ]
+                        questionsList: initialData.questionsList || initialData.questionList || defaultQuestions
                     });
                 } else {
                     setFormData({
@@ -135,10 +141,35 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
             return base;
         }
 
-        // Other group parts (6, 7) - placeholder
-        if (['part-six', 'part-seven'].includes(type)) {
-            return { ...base, transcript: '', questionText: 'Sub-question 1', option1: '', option2: '', option3: '', option4: '' };
+        if (type === 'part-six') {
+            return {
+                questionNo: 0,
+                passageText: '',
+                inVietnamese: '',
+                passageType: 'Text',
+                questionsList: [
+                    createEmptyQuestion(),
+                    createEmptyQuestion(),
+                    createEmptyQuestion(),
+                    createEmptyQuestion()
+                ]
+            };
         }
+
+        if (type === 'part-seven') {
+            return {
+                questionNo: 0,
+                numOfPassages: 1,
+                passageText: '',
+                inVietnamese: '',
+                passageType: 'Single Passage',
+                questionsList: [
+                    createEmptyQuestion(),
+                    createEmptyQuestion()
+                ]
+            };
+        }
+
         return base;
     };
 
@@ -318,130 +349,204 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
         </Grid>
     );
 
-    const renderGroupForm = () => (
-        <Box sx={{ mt: 1 }}>
-            {/* Parent Level Info */}
-            <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: '#f8f9fa' }}>
-                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                    GROUP INFORMATION
-                </Typography>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={4}>
-                        <TextField
-                            label="Starting Question No"
-                            fullWidth
-                            disabled
-                            value={formData.questionNo > 0 ? formData.questionNo : 'Auto-generated'}
-                            helperText="Assigned automatically"
-                            size="small"
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={8} />
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            label="Transcript (English)"
-                            fullWidth
-                            multiline
-                            rows={4}
-                            value={formData.transcript || ''}
-                            onChange={(e) => handleChange('transcript', e.target.value)}
-                            placeholder="Conversation text..."
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6}>
-                        <TextField
-                            label="Transcript (Vietnamese)"
-                            fullWidth
-                            multiline
-                            rows={4}
-                            value={formData.vietnameseTranscript || ''}
-                            onChange={(e) => handleChange('vietnameseTranscript', e.target.value)}
-                            placeholder="Vietnamese translation..."
-                        />
-                    </Grid>
-                </Grid>
-            </Paper>
+    const renderGroupForm = () => {
+        const isPart6 = partType === 'part-six';
+        const isPart7 = partType === 'part-seven';
+        const isTextOnly = isPart6 || isPart7;
 
-            {/* Media */}
-            <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                    MEDIA FILES
-                </Typography>
-                <Grid container spacing={2}>
-                    <Grid item xs={12} md={partType === 'part-four' ? 12 : 6}>
-                        {renderFileUpload('audio', 'Group Audio')}
-                    </Grid>
-                    {partType !== 'part-four' && (
-                        <Grid item xs={12} md={6}>
-                            {renderFileUpload('image', 'Context Image')}
+        const handleQuestionCountChange = (count) => {
+            const currentList = formData.questionsList || [];
+            if (count > currentList.length) {
+                const additional = Array(count - currentList.length).fill().map(() => createEmptyQuestion());
+                setFormData({ ...formData, questionsList: [...currentList, ...additional] });
+            } else if (count < currentList.length) {
+                setFormData({ ...formData, questionsList: currentList.slice(0, count) });
+            }
+        };
+
+        return (
+            <Box sx={{ mt: 1 }}>
+                {/* Parent Level Info */}
+                <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2, bgcolor: '#f8f9fa' }}>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                        GROUP INFORMATION
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} md={4}>
+                            <TextField
+                                label="Starting Question No"
+                                fullWidth
+                                disabled
+                                value={formData.questionNo > 0 ? formData.questionNo : 'Auto-generated'}
+                                helperText="Assigned automatically"
+                                size="small"
+                            />
                         </Grid>
-                    )}
-                </Grid>
-            </Paper>
-
-            {/* Sub Questions */}
-            <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
-                    QUESTIONS (3 ITEMS)
-                </Typography>
-                {formData.questionsList?.map((q, index) => (
-                    <Paper key={index} elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, pb: 1, borderBottom: '1px solid #eee' }}>
-                            <Box sx={{
-                                bgcolor: 'primary.main',
-                                color: 'white',
-                                width: 24,
-                                height: 24,
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                mr: 1.5,
-                                fontSize: '0.875rem',
-                                fontWeight: 'bold'
-                            }}>
-                                {index + 1}
-                            </Box>
-                            <Typography variant="subtitle1" fontWeight="bold">Question Details</Typography>
-                        </Box>
-
-                        <Grid container spacing={3}>
-                            <Grid item xs={12}>
-                                <TextField
-                                    label="Question Text"
-                                    fullWidth
-                                    value={q.questionText}
-                                    onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
-                                />
+                        {isPart7 && (
+                            <Grid item xs={12} md={4}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Number of Passages</InputLabel>
+                                    <Select
+                                        value={formData.numOfPassages || 1}
+                                        label="Number of Passages"
+                                        onChange={(e) => handleChange('numOfPassages', e.target.value)}
+                                    >
+                                        <MenuItem value={1}>Single Passage</MenuItem>
+                                        <MenuItem value={2}>Double Passage</MenuItem>
+                                        <MenuItem value={3}>Triple Passage</MenuItem>
+                                    </Select>
+                                </FormControl>
                             </Grid>
-                            {[1, 2, 3, 4].map(opt => (
-                                <Grid item xs={12} sm={6} key={opt}>
+                        )}
+                        {/* Spacer or Question Count for Part 7 */}
+                        <Grid item xs={12} md={isPart7 ? 4 : 8}>
+                            {isPart7 && (
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Number of Questions</InputLabel>
+                                    <Select
+                                        value={formData.questionsList?.length || 2}
+                                        label="Number of Questions"
+                                        disabled={!!initialData} // Disable valid change during edit to avoid backend sync issues for now
+                                        onChange={(e) => handleQuestionCountChange(e.target.value)}
+                                    >
+                                        {[2, 3, 4, 5].map(n => <MenuItem key={n} value={n}>{n} Questions</MenuItem>)}
+                                    </Select>
+                                </FormControl>
+                            )}
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label={isTextOnly ? "Passage Text" : "Transcript (English)"}
+                                fullWidth
+                                multiline
+                                rows={4}
+                                value={isTextOnly ? (formData.passageText || '') : (formData.transcript || '')}
+                                onChange={(e) => handleChange(isTextOnly ? 'passageText' : 'transcript', e.target.value)}
+                                placeholder={isTextOnly ? "Enter the reading passage..." : "Conversation text..."}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                label={isTextOnly ? "Vietnamese Translation" : "Transcript (Vietnamese)"}
+                                fullWidth
+                                multiline
+                                rows={4}
+                                value={isTextOnly ? (formData.inVietnamese || '') : (formData.vietnameseTranscript || '')}
+                                onChange={(e) => handleChange(isTextOnly ? 'inVietnamese' : 'vietnameseTranscript', e.target.value)}
+                                placeholder="Vietnamese translation..."
+                            />
+                        </Grid>
+                        {(isPart6 || isPart7) && (
+                            <Grid item xs={12} md={4}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Passage Type</InputLabel>
+                                    <Select
+                                        value={formData.passageType || (isPart7 ? 'Single Passage' : 'Text')}
+                                        label="Passage Type"
+                                        onChange={(e) => handleChange('passageType', e.target.value)}
+                                    >
+                                        <MenuItem value="Text">Text</MenuItem>
+                                        <MenuItem value="Email">Email</MenuItem>
+                                        <MenuItem value="Letter">Letter</MenuItem>
+                                        <MenuItem value="Notice">Notice</MenuItem>
+                                        <MenuItem value="Advertisement">Advertisement</MenuItem>
+                                        <MenuItem value="Article">Article</MenuItem>
+                                        <MenuItem value="Memo">Memo</MenuItem>
+                                        {isPart7 && <MenuItem value="Report">Report</MenuItem>}
+                                        {isPart7 && <MenuItem value="Announcement">Announcement</MenuItem>}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        )}
+                    </Grid>
+                </Paper>
+
+                {/* Media - Hide for Part 6, Show Image for Part 7 (No Audio) */}
+                {!isPart6 && (
+                    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                        <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                            MEDIA FILES
+                        </Typography>
+                        <Grid container spacing={2}>
+                            {/* Part 7: No Audio */}
+                            {partType !== 'part-seven' && (
+                                <Grid item xs={12} md={partType === 'part-four' ? 12 : 6}>
+                                    {renderFileUpload('audio', 'Group Audio')}
+                                </Grid>
+                            )}
+                            {partType !== 'part-four' && (
+                                <Grid item xs={12} md={6}>
+                                    {renderFileUpload('image', 'Context Image')}
+                                </Grid>
+                            )}
+                        </Grid>
+                    </Paper>
+                )}
+
+                {/* Sub Questions */}
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 2, fontWeight: 'bold', letterSpacing: '0.05em' }}>
+                        QUESTIONS ({formData.questionsList?.length || (isPart6 ? 4 : 3)} ITEMS)
+                    </Typography>
+                    {formData.questionsList?.map((q, index) => (
+                        <Paper key={index} elevation={2} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, pb: 1, borderBottom: '1px solid #eee' }}>
+                                <Box sx={{
+                                    bgcolor: 'primary.main',
+                                    color: 'white',
+                                    width: 24,
+                                    height: 24,
+                                    borderRadius: '50%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    mr: 1.5,
+                                    fontSize: '0.875rem',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {index + 1}
+                                </Box>
+                                <Typography variant="subtitle1" fontWeight="bold">Question Details</Typography>
+                            </Box>
+
+                            <Grid container spacing={3}>
+                                <Grid item xs={12}>
                                     <TextField
-                                        label={`Option ${['A', 'B', 'C', 'D'][opt - 1]}`}
+                                        label="Question Text"
                                         fullWidth
-                                        size="small"
-                                        value={q[`option${opt}`]}
-                                        onChange={(e) => handleQuestionChange(index, `option${opt}`, e.target.value)}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <Typography variant="body2" fontWeight="bold" color="text.secondary">
-                                                        {['(A)', '(B)', '(C)', '(D)'][opt - 1]}
-                                                    </Typography>
-                                                </InputAdornment>
-                                            )
-                                        }}
+                                        value={q.questionText}
+                                        onChange={(e) => handleQuestionChange(index, 'questionText', e.target.value)}
                                     />
                                 </Grid>
-                            ))}
-                        </Grid>
-                        <Divider sx={{ my: 3, width: '100%' }} />
-                        {renderCommonFields(q, index, true, true)}
-                    </Paper>
-                ))}
+                                {[1, 2, 3, 4].map(opt => (
+                                    <Grid item xs={12} sm={6} key={opt}>
+                                        <TextField
+                                            label={`Option ${['A', 'B', 'C', 'D'][opt - 1]}`}
+                                            fullWidth
+                                            size="small"
+                                            value={q[`option${opt}`]}
+                                            onChange={(e) => handleQuestionChange(index, `option${opt}`, e.target.value)}
+                                            InputProps={{
+                                                startAdornment: (
+                                                    <InputAdornment position="start">
+                                                        <Typography variant="body2" fontWeight="bold" color="text.secondary">
+                                                            {['(A)', '(B)', '(C)', '(D)'][opt - 1]}
+                                                        </Typography>
+                                                    </InputAdornment>
+                                                )
+                                            }}
+                                        />
+                                    </Grid>
+                                ))}
+                            </Grid>
+                            <Divider sx={{ my: 3, width: '100%' }} />
+                            {renderCommonFields(q, index, true, true)}
+                        </Paper>
+                    ))}
+                </Box>
             </Box>
-        </Box>
-    );
+        );
+    };
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
@@ -449,7 +554,7 @@ export default function TestPartDialog({ open, onClose, partType, onSave, initia
                 {initialData ? 'Edit Question' : 'Add Question'} - {partType?.replace('-', ' ').toUpperCase()}
             </DialogTitle>
             <DialogContent sx={{ py: 3 }}>
-                {(partType === 'part-three' || partType === 'part-four') ? renderGroupForm() : (
+                {['part-three', 'part-four', 'part-six', 'part-seven'].includes(partType) ? renderGroupForm() : (
                     <Box sx={{ mt: 1 }}>
                         {/* Default Single Question Form (Part 1, 2, 5) */}
                         <Grid container spacing={3} sx={{ mb: 4 }}>
